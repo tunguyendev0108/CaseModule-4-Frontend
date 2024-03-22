@@ -21,7 +21,7 @@ function login() {
       let result = JSON.stringify(response);
       console.log(result);
       alert("Login Successfully!");
-      window.location.href = "/index-2.html";
+      window.location.href = "/shop-without-sidebar.html";
     },
     error(errorThrown) {
       console.log(errorThrown);
