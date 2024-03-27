@@ -21,11 +21,31 @@ function login() {
       let result = JSON.stringify(response);
       console.log(result);
       alert("Login Successfully!");
-      window.location.href = "/shop-without-sidebar.html";
+      window.location.href = "list-drug.html";
     },
     error(errorThrown) {
       console.log(errorThrown);
     },
   });
   
+}
+  
+ 
+
+function logout() {
+  $.ajax({
+    url: "http://localhost:8080/api/auth/logout",
+    type: "POST",
+    dataType: "json",
+    contentType: "application/json",
+    success: function(response, status) {
+      // localStorage.clear();
+      alert("Logged out successfully!");
+      window.location.href = "index.html";
+
+    },
+    error(errorThrown) {
+      console.error("Error logging out:", errorThrown);
+    }
+  });
 }
