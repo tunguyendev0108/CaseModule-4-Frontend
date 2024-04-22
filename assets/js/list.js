@@ -2,13 +2,15 @@ let container = document.querySelector('.shop-content>.tab-content>.tab-pane>.ro
 let buttonFindByPrice = document.querySelector('.buttonFindByPrice')
 let findByName = document.querySelector('.search-input')
 let buttonSort = document.querySelector('select.orderby')
-let buttonShowFormCreate = document.querySelector('.shop-content>.tab-content>.tab-pane>.load-more-wrapper')
+let buttonShowFormCreate = document.querySelector('.shop-content>.tab-content>.tab-pane>.load-more-wrapper>a')
 let buttonCreate = document.querySelector('form.form-create>button[type=submit]')
 let arrDrugs = []
 let arrCategory = []
+let buttonHideFormCreate = document.querySelector('form.form-create svg')
 let formCreate = document.querySelector('form.form-create')
+function checkAuthenticate(){
 
-
+}
 
 function renderList(list){ 
     container.innerHTML = ''
@@ -37,7 +39,7 @@ function renderList(list){
                     <ul>
                         <li><a href="#"><i class="flaticon-valentines-heart"></i></a></li>
                         <li><a href="#"><i class="flaticon-compare"></i></a></li>
-                        <li><a href="#" class="trigger"><i class="flaticon-eye"></i></a></li>
+                        <li><a href="#" class="trigger"><i onclick="showDrug(${x.id})" class="flaticon-eye"></i></a></li>
                     </ul>
                 </div>
                 <div class="add-to-cart">
@@ -58,7 +60,14 @@ function renderList(list){
     }
 }
 
+function showDrug(id){
+    localStorage.setItem('drugId', id)
+    window.location.href = 'show-drug.html'
+    
+}
+
 function getData(url){
+ 
     document.querySelector('input[name=fromPrice]').value = ''
     document.querySelector('input[name=toPrice]').value = ''
     document.querySelector('.search-input').value = ''
@@ -67,6 +76,7 @@ function getData(url){
         url: url,
         type: 'get',
         success: function(response) {
+            
             arrDrugs = response
             renderList(response);  
         },
@@ -86,17 +96,33 @@ function getCategory(){
     })
 }
 
-function create(){
+function create(){  
     let form = new FormData(formCreate)
+    let token = localStorage.getItem('accessToken')
+    
     $.ajax({
         url: 'http://localhost:8080/api/drugs/create',
         type: 'post',
+        headers:{
+            'Accept': 'application/json',
+            "Authorization": "Bearer " + token
+        },
         data:form,
-        processData: false,
-        contentType:false,
+        processData:false,
+        contentType: false,
+        
         success: function(response){
-            getData();
+            formCreate.reset();
+            getData('http://localhost:8080/api/drugs');
+        },
+        error: function(xhr){
+            if(xhr.status == 401){
+                window.location.href = 'login.html'
+            } else if(403){
+                alert('Bạn không có quyền để thực hiện thao tác này')
+            }
         }
+        
     })
 }
 
@@ -105,17 +131,13 @@ function addToCart(id){
         type:'get',
         url: `http://localhost:8080/api/drugs/${id}`,
         success: function(response){
-            console.log(response);
-            $.ajax({
-                type:'post',
-                url:'http://localhost:8080/api/carts/add',
-                contentType: 'application/json',
-                data: JSON.stringify(response),
-                
-                success: function(responseAdd){
-                    console.log(responseAdd);
-                }
-            })
+            alert('Đã thêm')
+            let arrCartParse;
+            let arrCart = localStorage.getItem('arrCart')
+            if(arrCart == null) arrCartParse = []
+            else arrCartParse = JSON.parse(arrCart)
+            arrCartParse.push(response)
+            localStorage.setItem('arrCart', JSON.stringify(arrCartParse))  
         }
     })
 }
@@ -190,20 +212,36 @@ buttonFindByPrice.onclick = function(){
 buttonCreate.onclick = function(){
     event.preventDefault();
     create()
+    document.body.style.pointerEvents = 'auto'
+    formCreate.style.display = 'none'
+    document.body.style.opacity = 1 
+    
 }
 
 buttonShowFormCreate.onclick = function(){
     event.preventDefault()
-    let selectCategories = document.querySelector('form.form-create>select[name=categories]')  
+    let selectCategories = document.querySelector('form.form-create>select[name=categories]')
+    selectCategories.innerHTML = ''  
     for(let x of arrCategory){
         let option = document.createElement('option')
         option.value = x.id;
         option.innerText = x.name
-        console.log(option);
         selectCategories.appendChild(option)
     }
+    document.body.style.pointerEvents = 'none'
+    formCreate.style.pointerEvents = 'auto'
     formCreate.style.display = 'block'
+    document.body.style.opacity = 0.87 
+    
 }
+
+buttonHideFormCreate.onclick = function(){
+    document.body.style.pointerEvents = 'auto'
+    formCreate.style.display = 'none'
+    document.body.style.opacity = 1 
+    formCreate.reset();
+}
+
 getData('http://localhost:8080/api/drugs')
 getCategory()
 
